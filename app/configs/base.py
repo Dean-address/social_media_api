@@ -33,6 +33,7 @@ INSTALLED_APPS = [*DEFAULT_APP, *LOCAL_APP, *THIRD_PARTY_APP]
 SECRET_KEY = config("SECRET_KEY")
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -133,7 +134,7 @@ DJOSER = {
     "SET_PASSWORD_RETYPE": True,
     "USERNAME_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "email/reset/confirm/{uid}/{token}",
-    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "ACTIVATION_URL": "api/v1/activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
     "SOCIAL_AUTH_TOKEN_STRATEGY": "djoser.social.token.jwt.TokenStrategy",
     "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": [],
