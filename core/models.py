@@ -1,5 +1,12 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
+import os
+import uuid
+from cloudinary.models import CloudinaryField
+
+from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -41,3 +48,114 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
+
+
+def profile_image_file_path(instance, filename):
+
+    ext = os.path.splitext(filename)[1]
+    filename = f"{uuid.uuid4()}{ext}"
+
+    return os.path.join("uploads", "profiles", filename)
+
+
+class UserProfile(models.Model):
+    """Profile for a user"""
+
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name="userprofile"
+    )
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    other_names = models.CharField(max_length=255, blank=True)
+    bio = models.TextField(blank=True)
+    telephone = models.CharField(max_length=255, blank=True)
+    gender = models.CharField(
+        max_length=255,
+        blank=True,
+        choices=[
+            ("MALE", "MALE"),
+            ("FEMALE", "FEMALE"),
+        ],
+    )
+    image = models.ImageField(null=True, blank=True, upload_to=profile_image_file_path)
+
+    def __str__(self):
+        return self.user.username
+
+
+def post_image_file_path(instance, filename):
+
+    ext = os.path.splitext(filename)[1]
+    filename = f"{uuid.uuid4()}{ext}"
+
+    return os.path.join("post", "images", filename)
+
+
+def post_video_file_path(instance, filename):
+
+    ext = os.path.splitext(filename)[1]
+    filename = f"{uuid.uuid4()}{ext}"
+
+    return os.path.join("post", "videos", filename)
+
+
+class Post(models.Model):
+    """Post model for user"""
+
+    post_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="posts")
+    text = models.TextField(blank=True)
+    image = CloudinaryField("image", null=True, blank=True)
+    video = CloudinaryField(resource_type="video", null=True, blank=True)
+    caption = models.TextField()
+    # likes = models.ManyToManyField(CustomUser, blank=True, related_name="liked_posts")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def image_url(self):
+        return f"https://res.cloudinary.com/dobvp4toj/{self.image}"
+
+    @property
+    def video_url(self):
+        return f"https://res.cloudinary.com/dobvp4toj/{self.video}"
+
+    @property
+    def likes_count(self):
+        return Like.objects.filter(post=self).count()
+
+    @property
+    def likes(self):
+        return Like.objects.filter(post=self)
+
+    def __str__(self):
+        return f"Post by {self.user.username} at {self.created_at}"
+
+
+class Like(models.Model):
+    """Like model for user"""
+
+    like_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="likes")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "post")
+
+    def __str__(self):
+        return f"{self.user.username} like Post {self.post.post_id}"
+
+
+class Comment(models.Model):
+    """Comment model for user"""
+
+    comment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="comments"
+    )
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on Post {self.post.id}"

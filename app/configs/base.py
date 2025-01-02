@@ -1,10 +1,18 @@
 from datetime import timedelta
 from pathlib import Path
-from decouple import config
-from django.contrib import messages
+from decouple import config, Csv, UndefinedValueError
 
+# from dotenv import load_dotenv
+import os
+from django.contrib import messages
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+# load_dotenv()  # Add this line to load the .env file
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 
 DEFAULT_APP = [
     "django.contrib.admin",
@@ -18,6 +26,8 @@ DEFAULT_APP = [
 LOCAL_APP = [
     "core",
     "authentication",
+    "user_profile",
+    "content",
 ]
 
 THIRD_PARTY_APP = [
@@ -98,8 +108,17 @@ USE_TZ = True
 # # Static files (CSS, JavaScript, Images)
 # # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # # Default primary key field type
 # # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -115,6 +134,7 @@ MESSAGE_TAGS = {
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -155,7 +175,26 @@ DJOSER = {
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
+# drf-yasg
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Provide Bearer <token>",
+        },
+    }
+}
 
+# cloudinary
+cloudinary.config(
+    cloud_name=config("CLOUD_NAME"),
+    api_key=config("CLOUD_API_KEY"),
+    api_secret=config("CLOUD_API_SECRET"),
+)
+
+# EMAIL CONFIG
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = config("EMAIL_HOST")
 EMAIL_PORT = 465
