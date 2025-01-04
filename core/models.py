@@ -108,7 +108,6 @@ class Post(models.Model):
     image = CloudinaryField("image", null=True, blank=True)
     video = CloudinaryField(resource_type="video", null=True, blank=True)
     caption = models.TextField()
-    # likes = models.ManyToManyField(CustomUser, blank=True, related_name="liked_posts")
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -119,14 +118,6 @@ class Post(models.Model):
     def video_url(self):
         return f"https://res.cloudinary.com/dobvp4toj/{self.video}"
 
-    @property
-    def likes_count(self):
-        return Like.objects.filter(post=self).count()
-
-    @property
-    def likes(self):
-        return Like.objects.filter(post=self)
-
     def __str__(self):
         return f"Post by {self.user.username} at {self.created_at}"
 
@@ -135,7 +126,9 @@ class Like(models.Model):
     """Like model for user"""
 
     like_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="likes_user"
+    )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -154,8 +147,15 @@ class Comment(models.Model):
         CustomUser, on_delete=models.CASCADE, related_name="comments"
     )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    parent = models.ForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies"
+    )
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on Post {self.post.id}"
+        return f"Comment by {self.user.username} on Post {self.post.post_id}"
+
+    @property
+    def is_reply(self):
+        return self.parent is not None
