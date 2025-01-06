@@ -3,7 +3,11 @@ from decouple import config
 import dj_database_url
 
 DEBUG = config("DEBUG")
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "dean-finance.up.railway.app"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "socialmediaapi-production-a8cd.up.railway.app",
+]
 
 # CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
 
