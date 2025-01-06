@@ -2,6 +2,9 @@ from djoser.views import UserViewSet
 from rest_framework.response import Response
 from rest_framework import status
 
+from .serializers import CustomUserSerializer
+from rest_framework.parsers import FormParser, MultiPartParser
+
 
 class ActivateUser(UserViewSet):
     # To aciivate user account
@@ -15,3 +18,8 @@ class ActivateUser(UserViewSet):
     def activation(self, request, uid, token, *args, **kwargs):
         super().activation(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomUserViewSet(UserViewSet):
+    serializer_class = CustomUserSerializer
+    parser_classes = (FormParser, MultiPartParser)

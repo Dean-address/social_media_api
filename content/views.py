@@ -12,8 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.exceptions import ValidationError
 
-from .serializers import PostSerializer, LikeSerializer, CommentSerializer
-from core.models import Post, Like, Comment
+from .serializers import (
+    PostSerializer,
+    LikeSerializer,
+    CommentSerializer,
+    FollowSerializer,
+)
+from core.models import Post, Like, Comment, Follow, CustomUser
 
 
 # Create your views here.
@@ -98,3 +103,48 @@ class CommentView(generics.ListCreateAPIView):
             serializer.save(user=self.request.user, post=post, parent=parent_comment)
         else:
             serializer.save(user=self.request.user, post=post)
+
+
+class FollowView(generics.GenericAPIView):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = (FormParser, MultiPartParser)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(follower=self.request.user)
+
+    def post(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except user.DoesNotExist:
+            return Response(
+                {"error": "User does not exists"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serilizer = FollowSerializer(data=request.data, context={"request": request})
+        if serilizer.is_valid():
+            serilizer.save(follower=request.user, following=user)
+            return Response(serilizer.data, status=status.HTTP_201_CREATED)
+
+
+class UnFollowView(generics.GenericAPIView):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    parser_classes = (FormParser, MultiPartParser)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(follower=self.request.user)
+
+    def delete(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except user.DoesNotExist:
+            return Response(
+                {"error": "User does not exists"}, status=status.HTTP_404_NOT_FOUND
+            )
+        follower = Follow.objects.filter(follower=request.user, following=user)
+
+        if follower.exists():
+            follower.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

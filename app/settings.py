@@ -9,4 +9,4 @@ else:
 
 current_environment = "development" if env == True else "Production"
 print(f"Current environment: {current_environment}")
-print(f"Using database: {DATABASES['default']['NAME']}")
+# print(f"Using database: {DATABASES['default']['NAME']}")

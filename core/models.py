@@ -39,6 +39,7 @@ class UserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """User in the system"""
 
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
@@ -61,6 +62,7 @@ def profile_image_file_path(instance, filename):
 class UserProfile(models.Model):
     """Profile for a user"""
 
+    profile_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="userprofile"
     )
@@ -159,3 +161,22 @@ class Comment(models.Model):
     @property
     def is_reply(self):
         return self.parent is not None
+
+
+class Follow(models.Model):
+    """Follow model for user"""
+
+    follow_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    follower = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="following"
+    )
+    following = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="followers"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "following")
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"

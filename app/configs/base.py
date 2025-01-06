@@ -165,8 +165,10 @@ DJOSER = {
     "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": [],
     "SERIALIZERS": {
         "user_create": "authentication.serializers.UserCreateSerializer",  # custom serializer
-        "user": "djoser.serializers.UserSerializer",
-        "current_user": "djoser.serializers.UserSerializer",
+        # "user": "djoser.serializers.UserSerializer",
+        # "current_user": "djoser.serializers.UserSerializer",
+        "user": "authentication.serializers.CustomUserSerializer",
+        "current_user": "authentication.serializers.CustomUserSerializer",
         "user_delete": "djoser.serializers.UserSerializer",
     },
 }

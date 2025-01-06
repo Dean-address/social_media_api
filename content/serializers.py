@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Post, Like, Comment
+from core.models import Post, Like, Comment, Follow
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -75,3 +75,10 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.likes.count()
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = ["follow_id", "following", "following", "created_at"]
+        read_only_fields = ["follow_id", "following", "following", "created_at"]
