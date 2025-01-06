@@ -9,3 +9,5 @@ pillow>=10.3.0,<=11.0.0
 psycopg2
 cloudinary
 dj_database_url
+whitenoise
+gunicorn
